@@ -20,44 +20,30 @@
 
 if(!require(tidyverse)){library(tidyverse, quietly = TRUE)}
 if(!require(rlang)){library(rlang, quietly = TRUE)}
-if(!require(gt)){library(gt, quietly = TRUE)}
-if(!require(janitor)){library(janitor, quietly =TRUE )}
 
-`%ni%` <- Negate(`%in%`)
-
-sas_sort <- function(data, by_vars, showdots = FALSE, nodupout = FALSE, title = "", obs){
-  
-  if(showdots %ni% c(FALSE,TRUE)){
-    stop("showdots must be TRUE or FALSE")
-  } else if(nodupout %ni% c(FALSE,TRUE)){
-    stop("nodupout must be TRUE or FALSE")
-  } else{
-  }
+sas_sort <- function(data, by_vars, nodupout = FALSE){
   
   arrange_expr <- rlang::parse_exprs(by_vars)
-  if(nodupout == TRUE){
+  if(!nodupout %in% c(TRUE, FALSE)){
+    stop("nodupout must be either TRUE or FALSE")
+  } else if(nodupout == TRUE){
     data <- data %>% distinct(!!!arrange_expr, .keep_all = TRUE)
-  }else{
+  } else{
+    invisible()
   }
-  ds <- data %>% 
-    dplyr::arrange(!!!arrange_expr[1]) %>% group_by(!!!arrange_expr[1]) %>%
-    group_modify(~ {
-    .x %>% mutate("firstdot" := ifelse(row_number() == 1, 1, 0),
-                  "lastdot" := ifelse(row_number() == n(), 1, 0))}) %>%
-    ungroup() %>% group_by(!!!arrange_expr[2]) %>% group_modify(~ {
-      .x %>% mutate("firstdot_2" := ifelse(row_number() == 1, 1, 0),
-                    "lastdot_2" := ifelse(row_number() == n(), 1, 0))}) %>%
-      select(names(data), firstdot, lastdot, firstdot_2, lastdot_2)
   
-  if(showdots == FALSE){
-  gt_table <- ds %>% slice(1:obs) %>% gt() %>% cols_hide(c(firstdot, lastdot)) %>%
-    tab_header(title = md(title))
+  proc <- function(var, data){
+    ds <- data %>% arrange(!!!arrange_expr) %>% group_by(!!!var, .add = TRUE) %>%
+      group_modify(~{
+        .x %>% mutate("first.{{var}}" := ifelse(row_number() == 1, 1, 0),
+                      "last.{{var}}" := ifelse(row_number() == n(), 1, 0))})
   }
-  else{
-    gt_table <- ds %>% slice(1:obs) %>% gt() %>% tab_header(title = md(title))
+  
+  for(i in arrange_expr){
+    data <- proc(i, data)
   }
-  out <- list(ds, gt_table)
-  return(out)
+  data <- data %>% arrange(!!!arrange_expr)
+  return(data)
 }
 
 
