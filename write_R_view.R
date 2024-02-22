@@ -22,7 +22,15 @@ write_R_view <- function(df, new_name, view_type){
   }else if(view_type == "SAS"){
     #column_names <- names(df)
     type_of_column <- paste0(sapply(df, class), collapse = " ")
-    type_of_column <- paste0(gsub("character | character|character", "character $20. ", type_of_column), ";")
+    names_of_column <- names(df)
+    type_of_column <- unlist(strsplit(type_of_column, " "))
+    
+    input_types <- data.frame("names_of_column" = as.character(names_of_column), "column_types" = as.character(c(type_of_column)))
+    
+    input_types <- input_types %>% mutate(names_of_column = ifelse(trimws(column_types, which = "both") %in% c("character", "factor"), paste0(names_of_column, " 20$."),
+                                                    names_of_column))
+    
+    #return(input_types)
     
     data_for_SAS <- as.matrix(df)
     
@@ -34,7 +42,7 @@ write_R_view <- function(df, new_name, view_type){
     
     view <- paste0(
       "data ",new_name, ";
-          INPUT ", type_of_column,
+          INPUT ", paste0(input_types$names_of_column, collapse = " "), ";",
           "datalines;",
           SAS_Data,
               ";
@@ -52,14 +60,9 @@ write_R_view <- function(df, new_name, view_type){
   
   return(eval(parse_expr(new_name)))
 }
-write_R_view(iris, "iris_new", "SAS")
-cat(iris_new, file = "C:\\Users\\wilsonc\\Documents\\SAS_procs_to_R\\test.txt")
+
+write_R_view(iris, "new_iris", "SAS")
 
 
 
 
-
-iris_new
-iris_new
-iris <- eval(parse(text=iris_new))
-iris
