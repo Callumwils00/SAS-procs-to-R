@@ -22,12 +22,12 @@ write_R_view <- function(df, new_name, view_type){
   }else if(view_type == "SAS"){
     #column_names <- names(df)
     type_of_column <- paste0(sapply(df, class), collapse = " ")
-    names_of_column <- names(df)
+    names_of_column <- sub("[.]", "_", names(df))
     type_of_column <- unlist(strsplit(type_of_column, " "))
     
     input_types <- data.frame("names_of_column" = as.character(names_of_column), "column_types" = as.character(c(type_of_column)))
     
-    input_types <- input_types %>% mutate(names_of_column = ifelse(trimws(column_types, which = "both") %in% c("character", "factor"), paste0(names_of_column, " 20$."),
+    input_types <- input_types %>% mutate(names_of_column = ifelse(trimws(column_types, which = "both") %in% c("character", "factor"), paste0(names_of_column, " $20."),
                                                     names_of_column))
     
     #return(input_types)
@@ -37,15 +37,15 @@ write_R_view <- function(df, new_name, view_type){
     SAS_Data <- ""
     
     for(i in 1:nrow(data_for_SAS)){
-      SAS_Data <- paste0(SAS_Data, paste0(paste0(data_for_SAS[i,], collapse = " "), "/n "))
+      SAS_Data <- paste0(SAS_Data, paste0(paste0(data_for_SAS[i,], collapse = " "), "\n "))
     }
     
     view <- paste0(
       "data ",new_name, ";
           INPUT ", paste0(input_types$names_of_column, collapse = " "), ";",
-          "datalines;",
-          SAS_Data,
-              ";
+          "datalines; \n",
+           SAS_Data,
+              "
        run;")
     #return(SAS_Code)
     
@@ -61,8 +61,6 @@ write_R_view <- function(df, new_name, view_type){
   return(eval(parse_expr(new_name)))
 }
 
-write_R_view(iris, "new_iris", "SAS")
+write_R_view(airquality, "airquality_new", "SAS")
 
-
-
-
+cat(airquality_new ,file="outfile.txt")
