@@ -22,6 +22,9 @@ write_R_view <- function(df, new_name, view_type){
   }else if(view_type == "SAS"){
     #column_names <- names(df)
     type_of_column <- paste0(sapply(df, class), collapse = " ")
+    if(grepl("[.]", paste0(names(df), collapse = ", "))){
+      warning("Dataset names coercion occurred, special characters replaced with underscores")
+    }
     names_of_column <- sub("[.]", "_", names(df))
     type_of_column <- unlist(strsplit(type_of_column, " "))
     
@@ -61,6 +64,6 @@ write_R_view <- function(df, new_name, view_type){
   return(eval(parse_expr(new_name)))
 }
 
-write_R_view(airquality, "airquality_new", "SAS")
+write_R_view(airquality, "airquality_new", "R")
 
-cat(airquality_new ,file="outfile.txt")
+save(airquality_new ,file="outfile.RData")
