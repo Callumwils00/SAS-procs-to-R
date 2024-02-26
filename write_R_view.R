@@ -6,6 +6,9 @@ rename_object <- function(name_old, name_new){
 write_R_view <- function(df, new_name, view_type){
 
   if(view_type == "R"){
+    
+    warning("Coercing ", paste(names(df)[sapply(df, class) %in% c("numeric", "integer", "factor")], collapse = ",")," to characters")
+    
     list_of_cols <- setNames(split(as.matrix(df), col(df)), names(df))
     #list_of_cols
     #view <- as.list(c(names(list_of_cols)))
